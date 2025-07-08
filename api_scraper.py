@@ -104,6 +104,8 @@ def trigger_scraper():
         from optimasi_theread import run_custom
         hasil_path = os.path.abspath(run_custom(list_link, nama_file_csv=name))
 
+        # Buat folder static jika belum ada
+        os.makedirs("static", exist_ok=True)
         static_path = os.path.join("static", f"{name}.csv")
         shutil.copy(hasil_path, static_path)
 
