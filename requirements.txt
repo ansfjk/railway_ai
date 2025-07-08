@@ -1,0 +1,11 @@
+flask
+selenium==4.10.0
+selenium-stealth
+pandas
+rembg
+Pillow
+reportlab
+onnxruntime
+bs4
+# Jika pakai undetected-chromedriver, pastikan versi ini:
+# undetected-chromedriver==3.5.5
