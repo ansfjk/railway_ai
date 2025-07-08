@@ -88,6 +88,18 @@ def debug_csv():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)})
 
+@app.route("/download-latest")
+def download_latest():
+    global latest_scrape_path
+    if latest_scrape_path and os.path.exists(latest_scrape_path):
+        return send_file(
+            latest_scrape_path,
+            as_attachment=True,
+            download_name=os.path.basename(latest_scrape_path),
+            mimetype="text/csv"
+        )
+    return jsonify({"status": "error", "message": "Belum ada file scrape yang tersedia."}), 404
+
 @app.route("/run", methods=["POST"])
 def trigger_scraper():
     global scrape_thread
