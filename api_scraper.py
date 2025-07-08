@@ -100,16 +100,18 @@ def trigger_scraper():
         if df.empty:
             return jsonify({"status": "error", "message": "CSV kosong."}), 400
 
+        list_link = df["LINK"].dropna().tolist()
+
         def worker():
             with scrape_lock:
-                optimasi_theread.run(df, nama_file_csv=name)
+                optimasi_theread.run_custom(list_link, nama_file_csv=name)
 
         scrape_thread = threading.Thread(target=worker)
         scrape_thread.start()
 
         return jsonify({
             "status": "started",
-            "message": f"Scraping dimulai untuk {len(df)} link."
+            "message": f"Scraping dimulai untuk {len(list_link)} link."
         })
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
