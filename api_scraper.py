@@ -10,6 +10,7 @@ import threading
 
 # Ganti ID sesuai file kamu
 GDRIVE_FILE_ID = "1wgLHVpbkBjLN9mD_tBrfTv5_ne62Us-L7mbMkC4Dn2M"
+SHEET_ID = "1wgLHVpbkBjLN9mD_tBrfTv5_ne62Us-L7mbMkC4Dn2M"  # ← ID dari Google Sheets kamu
 
 # GDRIVE_DIRECT_LINK = f"https://drive.google.com/uc?export=download&id={GDRIVE_FILE_ID}"
 CSV_URL = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv"
