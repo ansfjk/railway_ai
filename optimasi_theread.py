@@ -111,7 +111,7 @@ def scrape_data(link, idx, img_folder, rembg_folder, executor):
 
             try:
                 data["NAMA PRODUK"] = driver.find_element(By.TAG_NAME, "h1").text.strip()
-                logging.info(f"✅ Data disimpan: {data["NAMA PRODUK"]}")
+                logging.info(f"✅ Data disimpan: {data['NAMA PRODUK']}")
             except: pass
 
             try:
