@@ -7,6 +7,6 @@ Pillow
 reportlab
 onnxruntime
 bs4
-io
+# io
 # Jika pakai undetected-chromedriver, pastikan versi ini:
 # undetected-chromedriver==3.5.5
