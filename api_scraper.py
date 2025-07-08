@@ -1,5 +1,5 @@
 import os
-import tempfile
+import tempfile, io
 from flask import Flask, request, jsonify, render_template_string, send_file
 import pandas as pd
 import requests
@@ -20,12 +20,13 @@ scrape_thread = None
 scrape_lock = threading.Lock()
 
 def get_gdrive_csv():
+    CSV_UR = "https://docs.google.com/spreadsheets/d/1wgLHVpbkBjLN9mD_tBrfTv5_ne62Us-L7mbMkC4Dn2M/export?format=csv"
     """Ambil CSV dari Google Drive dan kembalikan DataFrame."""
-    r = requests.get(CSV_URL)
+    r = requests.get(CSV_UR)
     if r.status_code != 200:
         raise Exception("Gagal download CSV dari Google Drive.")
     
-    df = pd.read_csv(BytesIO(r.content))
+    df = pd.read_csv(io.StringIO(r.text))
     
     if "LINK" not in df.columns:
         raise ValueError("CSV harus punya kolom 'LINK'")
