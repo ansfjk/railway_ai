@@ -92,10 +92,6 @@ def debug_csv():
 
 @app.route("/run", methods=["POST"])
 def trigger_scraper():
-    global scrape_thread
-    if scrape_thread and scrape_thread.is_alive():
-        return jsonify({"status": "running", "message": "Scraper masih berjalan."})
-
     try:
         name = request.form.get("name") or "hasil_scrape"
         df = get_gdrive_csv()
@@ -107,20 +103,17 @@ def trigger_scraper():
         from optimasi_theread import run_custom
         hasil_path = run_custom(list_link, nama_file_csv=name)
 
-        latest_scrape_path = hasil_path  # Simpan path hasil scrape terakhir
-        
-        def worker():
-            with scrape_lock:
-                optimasi_theread.run_custom(list_link, nama_file_csv=name)
+        if not os.path.exists(hasil_path):
+            return jsonify({"status": "error", "message": "File tidak ditemukan."}), 500
 
-        scrape_thread = threading.Thread(target=worker)
-        scrape_thread.start()
+        # Kirim langsung file CSV untuk didownload browser
+        return send_file(
+            hasil_path,
+            as_attachment=True,
+            download_name=f"{name}.csv",
+            mimetype="text/csv"
+        )
 
-
-        return jsonify({
-            "status": "started",
-            "message": f"Scraping dimulai untuk {len(list_link)} link."
-        })
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
