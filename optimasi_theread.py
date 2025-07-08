@@ -10,6 +10,7 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium_stealth import stealth
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
 import threading
@@ -44,12 +45,23 @@ COLUMNS = [
 
 def init_driver():
     options = Options()
-    options.add_argument("--headless")
+    options.add_argument("--disable-blink-features=AutomationControlled")
+    options.add_argument("start-maximized")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.binary_location = "/usr/bin/google-chrome"
+    options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64)")
     service = Service("/usr/local/bin/chromedriver")
-    return webdriver.Chrome(service=service, options=options)
+    driver = webdriver.Chrome(service=service, options=options)
+
+    stealth(driver,
+            languages=["en-US", "en"],
+            vendor="Google Inc.",
+            platform="Win32",
+            webgl_vendor="Intel Inc.",
+            renderer="Intel Iris OpenGL Engine",
+            fix_hairline=True)
+    return driver
 
 def normalize_label(text):
     return text.lower().strip().replace("produk", "").replace(":", "").replace(".", "").replace(",", "").strip()
@@ -114,7 +126,9 @@ def scrape_data(link, idx, img_folder, rembg_folder, executor):
             except: pass
 
             try:
-                harga_elem = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "text-2xl")))
+                harga_elem = WebDriverWait(driver, 10).until(
+                    EC.presence_of_element_located((By.CLASS_NAME, "text-2xl"))
+                )
                 data["HARGA"] = harga_elem.text.replace("Rp", "").replace(".", "").strip()
             except: pass
 
@@ -136,7 +150,9 @@ def scrape_data(link, idx, img_folder, rembg_folder, executor):
                 except: continue
 
             try:
-                img_elem = WebDriverWait(driver, 8).until(EC.presence_of_element_located((By.XPATH, '//img[contains(@class, "h-[350px] w-[350px]")]')))
+                img_elem = WebDriverWait(driver, 8).until(
+                    EC.presence_of_element_located((By.XPATH, '//img[contains(@class, "h-[350px] w-[350px]")]'))
+                )
                 src = img_elem.get_attribute("src")
                 if src.startswith("http"):
                     img_path = img_folder / f"{idx}.jpg"
