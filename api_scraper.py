@@ -1,7 +1,8 @@
 import os
 import tempfile, io
-from flask import Flask, request, jsonify, render_template_string, send_file
+from flask import Flask, request, jsonify, render_template_string, send_file, send_from_directory
 import pandas as pd
+import shutil
 import requests
 from io import BytesIO
 from bs4 import BeautifulSoup
@@ -103,6 +104,9 @@ def trigger_scraper():
         from optimasi_theread import run_custom
         hasil_path = os.path.abspath(run_custom(list_link, nama_file_csv=name))
 
+        static_path = os.path.join("static", f"{name}.csv")
+        shutil.copy(hasil_path, static_path)
+
         if not os.path.exists(hasil_path):
             return jsonify({"status": "error", "message": "File tidak ditemukan."}), 404
 
@@ -118,6 +122,10 @@ def trigger_scraper():
 
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
+
+@app.route("/download/<filename>")
+def download_file(filename):
+    return send_from_directory("static", filename, as_attachment=True)
 
 @app.route("/download-latest")
 def download_latest():
