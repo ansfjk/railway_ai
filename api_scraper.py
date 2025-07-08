@@ -18,6 +18,7 @@ CSV_URL = f"https://docs.google.com/spreadsheets/d/{SHEET_ID}/export?format=csv"
 app = Flask(__name__)
 
 scrape_thread = None
+latest_scrape_path = None
 scrape_lock = threading.Lock()
 
 def get_gdrive_csv():
@@ -88,17 +89,6 @@ def debug_csv():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)})
 
-@app.route("/download-latest")
-def download_latest():
-    global latest_scrape_path
-    if latest_scrape_path and os.path.exists(latest_scrape_path):
-        return send_file(
-            latest_scrape_path,
-            as_attachment=True,
-            download_name=os.path.basename(latest_scrape_path),
-            mimetype="text/csv"
-        )
-    return jsonify({"status": "error", "message": "Belum ada file scrape yang tersedia."}), 404
 
 @app.route("/run", methods=["POST"])
 def trigger_scraper():
@@ -121,6 +111,11 @@ def trigger_scraper():
         scrape_thread = threading.Thread(target=worker)
         scrape_thread.start()
 
+        from optimasi_theread import run_custom
+        hasil_path = run_custom(list_link, nama_file_csv=name)
+
+        latest_scrape_path = hasil_path  # Simpan path hasil scrape terakhir
+
         return jsonify({
             "status": "started",
             "message": f"Scraping dimulai untuk {len(list_link)} link."
@@ -128,6 +123,17 @@ def trigger_scraper():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
+@app.route("/download-latest")
+def download_latest():
+    global latest_scrape_path
+    if latest_scrape_path and os.path.exists(latest_scrape_path):
+        return send_file(
+            latest_scrape_path,
+            as_attachment=True,
+            download_name=os.path.basename(latest_scrape_path),
+            mimetype="text/csv"
+        )
+    return jsonify({"status": "error", "message": "Belum ada file scrape yang tersedia."}), 404
 
 
 @app.route("/run", methods=["GET"])
