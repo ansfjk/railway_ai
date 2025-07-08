@@ -101,10 +101,11 @@ def trigger_scraper():
         list_link = df["LINK"].dropna().tolist()
 
         from optimasi_theread import run_custom
-        hasil_path = run_custom(list_link, nama_file_csv=name)
+        hasil_path = os.path.abspath(run_custom(list_link, nama_file_csv=name))
 
         if not os.path.exists(hasil_path):
-            return jsonify({"status": "error", "message": "File tidak ditemukan."}), 500
+            return jsonify({"status": "error", "message": "File tidak ditemukan."}), 404
+
 
         # Kirim langsung file CSV untuk didownload browser
         return send_file(
@@ -113,6 +114,7 @@ def trigger_scraper():
             download_name=f"{name}.csv",
             mimetype="text/csv"
         )
+
 
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
