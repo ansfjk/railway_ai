@@ -11,17 +11,13 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from pathlib import Path
 from selenium_stealth import stealth
 from concurrent.futures import ThreadPoolExecutor
-import threading
-import tempfile
-from concurrent.futures import ThreadPoolExecutor, Future
-import multiprocessing
 import shutil
+import zipfile
+
 from selenium.common.exceptions import TimeoutException
 
-# Optional rembg
 try:
     from rembg import remove
 except ImportError:
@@ -29,7 +25,6 @@ except ImportError:
         logging.warning("⚠️ rembg not available, skipping background removal.")
         return img_bytes
 
-# Logging setup
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
 RAW_SPEC_COLUMNS = [
@@ -47,21 +42,13 @@ COLUMNS = [
     "Merek", "Nama Pemilik SNI", "SNI", "Nomor SKU", "Kode KBKI", "Jenis Produk"
 ] + [col.replace("Spec_", "").replace("Select_", "").replace("Add_", "").strip() for col in RAW_SPEC_COLUMNS]
 
-# def close_driver(driver):
-#     try:
-#         driver.quit()
-#         time.sleep(3)
-#     finally:
-#         if hasattr(driver, "_user_data_dir"):
-#             shutil.rmtree(driver._user_data_dir, ignore_errors=True)
-
 def init_driver():
     options = Options()
+    options.add_argument("--headless")
     options.add_argument("start-maximized")
     options.add_argument("--disable-blink-features=AutomationControlled")
     options.add_argument("user-agent=Mozilla/5.0")
     options.add_argument("--no-sandbox")
-    options.add_argument("--headless")
     options.add_argument("--disable-dev-shm-usage")
 
     driver = webdriver.Chrome(options=options)
@@ -115,13 +102,10 @@ def scrape_data(driver, link, idx, img_folder, rembg_folder, executor):
         time.sleep(3)
 
         try:
-            # Tunggu hingga elemen <h1> muncul DAN tidak berisi "Sebentar..."
             WebDriverWait(driver, 30).until(
                 lambda d: d.find_element(By.TAG_NAME, "h1") and d.find_element(By.TAG_NAME, "h1").text.strip().lower() != "sebentar..."
             )
             nama_produk_elem = driver.find_element(By.TAG_NAME, "h1")
-
-            logging.info(f"hasil {nama_produk_elem.text()}")
             nama_text = nama_produk_elem.text.strip()
 
             if not nama_text or nama_text.lower() == "sebentar...":
@@ -131,15 +115,7 @@ def scrape_data(driver, link, idx, img_folder, rembg_folder, executor):
             logging.info(f"✅ NAMA PRODUK ditemukan: {data['NAMA PRODUK']}")
         except Exception as e:
             data["NAMA PRODUK"] = driver.find_element(By.TAG_NAME, "h1").text.strip()
-            logging.info(f"hasil {data['NAMA PRODUK']}")
             logging.warning(f"❌ Gagal ambil NAMA PRODUK dari {link}: {e}")
-            try:
-                with open(f"debug_nama_produk_{idx}.html", "w", encoding="utf-8") as f:
-                    f.write(driver.page_source)
-            except Exception as save_err:
-                logging.error(f"Gagal simpan HTML debug untuk {link}: {save_err}")
-
-
 
         try:
             harga_elem = WebDriverWait(driver, 10).until(
@@ -217,19 +193,25 @@ def run_custom(list_link, nama_file_csv="hasil_scrape", output_dir="CSV Sumber")
             start = time.time()
             data = scrape_data(driver, link, idx, folder_gambar_asli, folder_gambar_nobg, executor)
 
-            # Cek apakah NAMA PRODUK tidak valid
             if data.get("NAMA PRODUK", "").strip().lower() == "sebentar...":
                 logging.warning(f"⚠️ NAMA PRODUK belum valid untuk {link}, hentikan scraping untuk sementara.")
-                break  # Berhenti dari loop jika nama produk belum berhasil diambil
+                break
 
             hasil_scrape.append(data)
             logging.info(f"{idx}: Done in {time.time() - start:.2f}s")
     finally:
-        # close_driver(driver)
         executor.shutdown(wait=True)
 
     df_final = pd.DataFrame(hasil_scrape)
-    df_final = df_final.reindex(columns=COLUMNS)  # biar kolom tetap sesuai urutan
+    df_final = df_final.reindex(columns=COLUMNS)
     df_final.to_csv(hasil_csv_path, index=False, encoding="utf-8")
-    logging.info(f"✅ Data disimpan: {hasil_csv_path}")
-    return str(hasil_csv_path)
+    logging.info(f"✅ CSV disimpan: {hasil_csv_path}")
+
+    # ✅ ZIP gambar hasil rembg
+    zip_path = output_dir / f"{nama_file_csv}_images.zip"
+    with zipfile.ZipFile(zip_path, "w") as zipf:
+        for img in folder_gambar_nobg.glob("*.png"):
+            zipf.write(img, arcname=img.name)
+    logging.info(f"✅ ZIP gambar disimpan: {zip_path}")
+
+    return str(zip_path)
