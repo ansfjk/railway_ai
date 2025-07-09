@@ -205,7 +205,25 @@ def scrape_data(driver, link, idx, img_folder, rembg_folder, executor):
             data["TKDN"] = value_elem.text.strip()
             data["Link TKDN"] = value_elem.get_attribute("href")
 
-            future_tkdn = executor.submit(ambil_tkdn_data, data["Link TKDN"])
+            # Langsung buka tab baru untuk scrape TKDN
+            try:
+                driver.execute_script("window.open('');")
+                driver.switch_to.window(driver.window_handles[-1])
+                driver.get(data["Link TKDN"])
+                WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
+
+                try:
+                    label = driver.find_element(By.XPATH, "//div[contains(text(), 'No. Sertifikat')]")
+                    data["No Sertifikat TKDN"] = label.find_element(By.XPATH, "./following-sibling::div").text.strip()
+                except:
+                    data["No Sertifikat TKDN"] = ""
+
+                driver.close()
+                driver.switch_to.window(driver.window_handles[0])
+            except Exception as e:
+                logging.warning(f"Gagal ambil detail TKDN dari {data['Link TKDN']}: {e}")
+                data["No Sertifikat TKDN"] = ""
+
         except Exception as e:
             logging.warning(f"Gagal ambil TKDN dari {link}: {e}")
 
