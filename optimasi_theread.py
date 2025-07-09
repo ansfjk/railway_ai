@@ -294,6 +294,7 @@ def run_custom(list_link, nama_file_csv="hasil_scrape", output_dir="CSV Sumber")
             logging.info(f"{idx}: Done in {time.time() - start:.2f}s")
     finally:
         driver.quit()
+        close_driver(driver)
         executor.shutdown()
 
     pd.DataFrame(hasil_scrape)[COLUMNS].to_csv(hasil_csv_path, index=False, encoding="utf-8")
