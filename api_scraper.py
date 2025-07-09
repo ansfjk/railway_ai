@@ -125,10 +125,6 @@ def trigger_scraper():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
-@app.route("/download/<filename>")
-def download_file(filename):
-    return send_from_directory("static", filename, as_attachment=True)
-
 @app.route("/download-latest")
 def download_latest():
     global latest_scrape_path
