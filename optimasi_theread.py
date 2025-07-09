@@ -111,19 +111,25 @@ def remove_bg_and_save(input_path, output_path):
 def ambil_tkdn_data(link_tkdn):
     data = {}
     try:
-        driver = init_driver()
+        options = Options()
+        options.add_argument("--headless=new")
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
+        options.add_argument("--disable-blink-features=AutomationControlled")
+        options.add_argument("user-agent=Mozilla/5.0")
+
+        driver = webdriver.Chrome(options=options)
         driver.get(link_tkdn)
+
         WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
         try:
             label = driver.find_element(By.XPATH, "//div[contains(text(), 'No. Sertifikat')]")
             data["No Sertifikat TKDN"] = label.find_element(By.XPATH, "./following-sibling::div").text.strip()
-        except Exception as e:
-            logging.warning(f"Label sertifikat tidak ditemukan di {link_tkdn}: {e}")
+        except:
             data["No Sertifikat TKDN"] = ""
         driver.quit()
-        close_driver(driver)
     except Exception as e:
-        logging.warning(f"Thread TKDN error untuk {link_tkdn}: {e}")
+        logging.warning(f"Thread TKDN error: {e}")
         data["No Sertifikat TKDN"] = ""
     return data
 
