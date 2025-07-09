@@ -15,6 +15,7 @@ from pathlib import Path
 from selenium_stealth import stealth
 from concurrent.futures import ThreadPoolExecutor
 import threading
+import tempfile
 from concurrent.futures import ThreadPoolExecutor, Future
 import multiprocessing
 
@@ -50,9 +51,20 @@ def init_driver():
     options.add_argument("start-maximized")
     options.add_argument("--disable-blink-features=AutomationControlled")
     options.add_argument("user-agent=Mozilla/5.0")
+
+    # ⛑ FIX untuk error 'user data dir in use'
+    user_data_dir = tempfile.mkdtemp(prefix="selenium_user_")
+    options.add_argument(f"--user-data-dir={user_data_dir}")
+
     driver = webdriver.Chrome(options=options)
-    stealth(driver, languages=["en-US", "en"], vendor="Google Inc.",
-            platform="Win32", webgl_vendor="Intel Inc.", renderer="Intel Iris OpenGL Engine", fix_hairline=True)
+    stealth(driver,
+        languages=["en-US", "en"],
+        vendor="Google Inc.",
+        platform="Win32",
+        webgl_vendor="Intel Inc.",
+        renderer="Intel Iris OpenGL Engine",
+        fix_hairline=True
+    )
     return driver
 
 def normalize_label(text):

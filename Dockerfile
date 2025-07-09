@@ -11,6 +11,8 @@ RUN apt-get update && apt-get install -y \
     && rm -f google-chrome-stable_current_amd64.deb \
     && rm -rf /var/lib/apt/lists/*
 
+# Pastikan direktori /tmp bisa ditulis
+RUN chmod 1777 /tmp
 # Install ChromeDriver matching version: 138.0.7204.92
 RUN wget -qO /tmp/chromedriver.zip \
     "https://storage.googleapis.com/chrome-for-testing-public/138.0.7204.92/linux64/chromedriver-linux64.zip" && \
@@ -25,6 +27,7 @@ ENV DISPLAY=:99
 # Install Python dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
+
 
 # Copy project files
 COPY . /app
