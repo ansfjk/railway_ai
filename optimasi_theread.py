@@ -130,6 +130,8 @@ def scrape_data(driver, link, idx, img_folder, rembg_folder, executor):
             data["NAMA PRODUK"] = nama_text
             logging.info(f"✅ NAMA PRODUK ditemukan: {data['NAMA PRODUK']}")
         except Exception as e:
+            data["NAMA PRODUK"] = driver.find_element(By.TAG_NAME, "h1").text.strip()
+            logging.info(f"hasil {data("NAMA PRODUK")}")
             logging.warning(f"❌ Gagal ambil NAMA PRODUK dari {link}: {e}")
             try:
                 with open(f"debug_nama_produk_{idx}.html", "w", encoding="utf-8") as f:
