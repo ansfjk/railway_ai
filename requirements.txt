@@ -1,12 +1,18 @@
+# Web server
 flask
+
+# Scraper
 selenium==4.10.0
 selenium-stealth
+
+# Data processing
 pandas
-rembg
-Pillow
-reportlab
-onnxruntime
 bs4
-# io
-# Jika pakai undetected-chromedriver, pastikan versi ini:
-# undetected-chromedriver==3.5.5
+
+# Image processing
+Pillow
+rembg==2.0.54           # Versi stabil, support CLI & Python API
+onnxruntime==1.16.3      # Cocok dengan rembg, versi stabil
+
+# PDF (jika digunakan)
+reportlab
