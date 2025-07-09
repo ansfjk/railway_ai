@@ -19,6 +19,7 @@ import tempfile
 from concurrent.futures import ThreadPoolExecutor, Future
 import multiprocessing
 import shutil
+from selenium.common.exceptions import TimeoutException
 
 # Optional rembg
 try:
@@ -205,27 +206,27 @@ def scrape_data(driver, link, idx, img_folder, rembg_folder, executor):
             data["TKDN"] = value_elem.text.strip()
             data["Link TKDN"] = value_elem.get_attribute("href")
 
-            # Langsung buka tab baru untuk scrape TKDN
+            # ⏬ Langsung ambil data TKDN di tab aktif (bukan tab baru)
+            current_url = driver.current_url
+            driver.get(data["Link TKDN"])
+
             try:
-                current_url = driver.current_url  # simpan URL halaman utama
-
-                driver.get(data["Link TKDN"])  # langsung buka halaman TKDN di tab aktif
-                WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
-
-                try:
-                    label = driver.find_element(By.XPATH, "//div[contains(text(), 'No. Sertifikat')]")
-                    data["No Sertifikat TKDN"] = label.find_element(By.XPATH, "./following-sibling::div").text.strip()
-                except:
-                    data["No Sertifikat TKDN"] = ""
-
-                driver.get(current_url)  # kembali ke halaman utama produk
-
-            except Exception as e:
-                logging.warning(f"Gagal ambil detail TKDN dari {data['Link TKDN']}: {e}")
+                sertifikat_elem = WebDriverWait(driver, 5).until(
+                    EC.presence_of_element_located((By.XPATH, "//div[contains(text(), 'No. Sertifikat')]"))
+                )
+                sertifikat_val = sertifikat_elem.find_element(By.XPATH, "./following-sibling::div").text.strip()
+                data["No Sertifikat TKDN"] = sertifikat_val
+            except TimeoutException:
                 data["No Sertifikat TKDN"] = ""
+
+            # 🔙 Kembali ke halaman awal produk
+            driver.get(current_url)
 
         except Exception as e:
             logging.warning(f"Gagal ambil TKDN dari {link}: {e}")
+            data["TKDN"] = ""
+            data["Link TKDN"] = ""
+            data["No Sertifikat TKDN"] = ""
 
         try:
             data["NAMA PRODUK"] = driver.find_element(By.TAG_NAME, "h1").text.strip()
