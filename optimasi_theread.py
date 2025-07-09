@@ -202,6 +202,12 @@ def run_custom(list_link, nama_file_csv="hasil_scrape", output_dir="CSV Sumber")
                 continue
             start = time.time()
             data = scrape_data(driver, link, idx, folder_gambar_asli, folder_gambar_nobg, executor)
+
+            # Cek apakah NAMA PRODUK tidak valid
+            if data.get("NAMA PRODUK", "").strip().lower() == "sebentar...":
+                logging.warning(f"⚠️ NAMA PRODUK belum valid untuk {link}, hentikan scraping untuk sementara.")
+                break  # Berhenti dari loop jika nama produk belum berhasil diambil
+
             hasil_scrape.append(data)
             logging.info(f"{idx}: Done in {time.time() - start:.2f}s")
     finally:
