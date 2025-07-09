@@ -214,6 +214,8 @@ def run_custom(list_link, nama_file_csv="hasil_scrape", output_dir="CSV Sumber")
         # close_driver(driver)
         executor.shutdown(wait=True)
 
-    pd.DataFrame(hasil_scrape)[COLUMNS].to_csv(hasil_csv_path, index=False, encoding="utf-8")
+    df_final = pd.DataFrame(hasil_scrape)
+    df_final = df_final.reindex(columns=COLUMNS)  # biar kolom tetap sesuai urutan
+    df_final.to_csv(hasil_csv_path, index=False, encoding="utf-8")
     logging.info(f"✅ Data disimpan: {hasil_csv_path}")
     return str(hasil_csv_path)
