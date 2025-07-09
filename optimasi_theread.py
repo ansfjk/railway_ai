@@ -18,6 +18,7 @@ import threading
 import tempfile
 from concurrent.futures import ThreadPoolExecutor, Future
 import multiprocessing
+import shutil
 
 # Optional rembg
 try:
@@ -46,6 +47,14 @@ COLUMNS = [
     "Merek", "Nama Pemilik SNI", "SNI", "Nomor SKU", "Kode KBKI", "Jenis Produk"
 ] + [col.replace("Spec_", "").replace("Select_", "").replace("Add_", "").strip() for col in RAW_SPEC_COLUMNS]
 
+def close_driver(driver):
+    try:
+        driver.quit()
+    finally:
+        # 🧹 Hapus direktori user-data
+        if hasattr(driver, "_user_data_dir"):
+            shutil.rmtree(driver._user_data_dir, ignore_errors=True)
+            
 def init_driver():
     options = Options()
     options.add_argument("start-maximized")
@@ -57,6 +66,7 @@ def init_driver():
     options.add_argument(f"--user-data-dir={user_data_dir}")
 
     driver = webdriver.Chrome(options=options)
+    driver._user_data_dir = user_data_dir  # 🧹 Tandai untuk cleanup nanti
     stealth(driver,
         languages=["en-US", "en"],
         vendor="Google Inc.",
