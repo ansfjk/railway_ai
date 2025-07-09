@@ -115,16 +115,26 @@ def scrape_data(driver, link, idx, img_folder, rembg_folder, executor):
         time.sleep(3)
 
         try:
-            WebDriverWait(driver, 15).until(
-                lambda d: d.find_element(By.TAG_NAME, "h1").text.strip().lower() != "sebentar..."
+            # Tunggu hingga elemen <h1> muncul DAN tidak berisi "Sebentar..."
+            WebDriverWait(driver, 30).until(
+                lambda d: d.find_element(By.TAG_NAME, "h1") and d.find_element(By.TAG_NAME, "h1").text.strip().lower() != "sebentar..."
             )
             nama_produk_elem = driver.find_element(By.TAG_NAME, "h1")
-            data["NAMA PRODUK"] = nama_produk_elem.text.strip()
+            nama_text = nama_produk_elem.text.strip()
+
+            if not nama_text or nama_text.lower() == "sebentar...":
+                raise ValueError("NAMA PRODUK masih kosong atau 'Sebentar...'")
+
+            data["NAMA PRODUK"] = nama_text
             logging.info(f"✅ NAMA PRODUK ditemukan: {data['NAMA PRODUK']}")
         except Exception as e:
             logging.warning(f"❌ Gagal ambil NAMA PRODUK dari {link}: {e}")
-            with open(f"debug_nama_produk_{idx}.html", "w", encoding="utf-8") as f:
-                f.write(driver.page_source)
+            try:
+                with open(f"debug_nama_produk_{idx}.html", "w", encoding="utf-8") as f:
+                    f.write(driver.page_source)
+            except Exception as save_err:
+                logging.error(f"Gagal simpan HTML debug untuk {link}: {save_err}")
+
 
 
         try:
