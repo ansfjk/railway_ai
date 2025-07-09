@@ -115,17 +115,17 @@ def scrape_data(driver, link, idx, img_folder, rembg_folder, executor):
         time.sleep(3)
 
         try:
-            data["NAMA PRODUK"] = driver.find_element(By.TAG_NAME, "h1").text.strip()
-            try:
-                nama_produk_elem = driver.find_element(By.TAG_NAME, "h1")
-                data["NAMA PRODUK"] = nama_produk_elem.text.strip()
-                logging.info(f"✅ NAMA PRODUK ditemukan: {data['NAMA PRODUK']}")
-            except Exception as e:
-                logging.info(f"❌ Gagal ambil NAMA PRODUK: {e}")
-                with open(f"debug_nama_produk_{idx}.html", "w", encoding="utf-8") as f:
-                    f.write(driver.page_source)
+            WebDriverWait(driver, 15).until(
+                lambda d: d.find_element(By.TAG_NAME, "h1").text.strip().lower() != "sebentar..."
+            )
+            nama_produk_elem = driver.find_element(By.TAG_NAME, "h1")
+            data["NAMA PRODUK"] = nama_produk_elem.text.strip()
+            logging.info(f"✅ NAMA PRODUK ditemukan: {data['NAMA PRODUK']}")
+        except Exception as e:
+            logging.warning(f"❌ Gagal ambil NAMA PRODUK dari {link}: {e}")
+            with open(f"debug_nama_produk_{idx}.html", "w", encoding="utf-8") as f:
+                f.write(driver.page_source)
 
-        except: pass
 
         try:
             harga_elem = WebDriverWait(driver, 10).until(
