@@ -202,6 +202,7 @@ def scrape_data(driver, link, idx, img_folder, rembg_folder, executor):
 
         try:
             data["NAMA PRODUK"] = driver.find_element(By.TAG_NAME, "h1").text.strip()
+            logging.DEBUG(f"Nm dari {data["NAMA PRODUK"]}")
         except: pass
 
         try:

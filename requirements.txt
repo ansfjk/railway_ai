@@ -16,3 +16,4 @@ onnxruntime==1.16.3      # Cocok dengan rembg, versi stabil
 
 # PDF (jika digunakan)
 reportlab
+numpy<2  # ⛑️ Fix onnxruntime & rembg crash di NumPy 2.x
