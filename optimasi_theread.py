@@ -31,7 +31,6 @@ except ImportError:
 
 # Logging setup
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
-# multiprocessing.set_start_method("fork", force=True)
 
 RAW_SPEC_COLUMNS = [
     "Spec_Tipe", "Spec_Warna Produk", "Spec_Select_Transmisi", "Spec_Kapasitas Tangki Bensin",
@@ -44,14 +43,14 @@ RAW_SPEC_COLUMNS = [
 ]
 
 COLUMNS = [
-    "NO", "LINK", "TKDN", "Link TKDN", "No Sertifikat TKDN", "NAMA PRODUK", "HARGA",
+    "NO", "LINK", "NAMA PRODUK", "HARGA",
     "Merek", "Nama Pemilik SNI", "SNI", "Nomor SKU", "Kode KBKI", "Jenis Produk"
 ] + [col.replace("Spec_", "").replace("Select_", "").replace("Add_", "").strip() for col in RAW_SPEC_COLUMNS]
 
 def close_driver(driver):
     try:
         driver.quit()
-        time.sleep(1)  # ← 
+        time.sleep(1)
     finally:
         if hasattr(driver, "_user_data_dir"):
             shutil.rmtree(driver._user_data_dir, ignore_errors=True)
@@ -65,12 +64,7 @@ def init_driver():
     options.add_argument("--headless=new")
     options.add_argument("--disable-dev-shm-usage")
 
-
-    # user_data_dir = tempfile.mkdtemp(prefix="selenium_user_")
-    # options.add_argument(f"--user-data-dir={user_data_dir}")
-
     driver = webdriver.Chrome(options=options)
-    # driver._user_data_dir = user_data_dir
     stealth(driver,
         languages=["en-US", "en"],
         vendor="Google Inc.",
@@ -109,124 +103,16 @@ def remove_bg_and_save(input_path, output_path):
         logging.warning(f"Gagal hapus background: {e}")
         return ""
 
-def ambil_tkdn_data(link_tkdn):
-    data = {}
-    try:
-        options = Options()
-        options.add_argument("--headless=new")
-        options.add_argument("--no-sandbox")
-        options.add_argument("--disable-dev-shm-usage")
-        options.add_argument("--disable-blink-features=AutomationControlled")
-        options.add_argument("user-agent=Mozilla/5.0")
-
-        driver = webdriver.Chrome(options=options)
-        driver.get(link_tkdn)
-
-        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
-        try:
-            label = driver.find_element(By.XPATH, "//div[contains(text(), 'No. Sertifikat')]")
-            data["No Sertifikat TKDN"] = label.find_element(By.XPATH, "./following-sibling::div").text.strip()
-        except:
-            data["No Sertifikat TKDN"] = ""
-        driver.quit()
-    except Exception as e:
-        logging.warning(f"Thread TKDN error: {e}")
-        data["No Sertifikat TKDN"] = ""
-    return data
-
-
 def scrape_data(driver, link, idx, img_folder, rembg_folder, executor):
     data = {k: "" for k in COLUMNS}
     data["NO"] = idx
     data["LINK"] = link
-    future_tkdn: Future = None
 
     print(f"🔗 Scrape {idx}: {link}")
-    # try:
-    #     with init_driver() as driver:
-    #         driver.get(link)
-    #         WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
-    #         time.sleep(1)
-
-    #         try:
-    #             label_elem = driver.find_element(By.XPATH, "//div[contains(text(), 'Nilai TKDN')]")
-    #             value_elem = label_elem.find_element(By.XPATH, "./following-sibling::div//a")
-    #             data["TKDN"] = value_elem.text.strip()
-    #             data["Link TKDN"] = value_elem.get_attribute("href")
-    #             future_tkdn = executor.submit(ambil_tkdn_data, data["Link TKDN"])
-    #         except: pass
-
-    #         try:
-    #             data["NAMA PRODUK"] = driver.find_element(By.TAG_NAME, "h1").text.strip()
-    #             logging.info(f"✅ Data disimpan: {data['NAMA PRODUK']}")
-    #         except: pass
-
-    #         try:
-    #             harga_elem = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CLASS_NAME, "text-2xl")))
-    #             data["HARGA"] = harga_elem.text.replace("Rp", "").replace(".", "").strip()
-    #         except: pass
-
-    #         try:
-    #             deskripsi = driver.find_element(By.XPATH, "//div[h2[contains(text(),'Deskripsi Produk')]]/following-sibling::div")
-    #             data["Deskripsi Produk"] = deskripsi.text.strip()
-    #         except: pass
-
-    #         blocks = driver.find_elements(By.CSS_SELECTOR, "div.grid.grid-cols-1")
-    #         for block in blocks:
-    #             try:
-    #                 children = block.find_elements(By.XPATH, "./div")
-    #                 if len(children) >= 2:
-    #                     label, value = children[0].text.strip(), children[1].text.strip()
-    #                     for col in COLUMNS:
-    #                         if normalize_label(label) == normalize_label(col):
-    #                             data[col] = value
-    #                             break
-    #             except: continue
-
-    #         try:
-    #             img_elem = WebDriverWait(driver, 8).until(EC.presence_of_element_located((By.XPATH, '//img[contains(@class, "h-[350px] w-[350px]")]')))
-    #             src = img_elem.get_attribute("src")
-    #             if src.startswith("http"):
-    #                 img_path = img_folder / f"{idx}.jpg"
-    #                 nobg_path = rembg_folder / f"{idx}.png"
-    #                 if download_image(driver, src, img_path):
-    #                     saved = remove_bg_and_save(img_path, nobg_path)
-    #                     data["Image_Path_1"] = saved
-    #         except: pass
     try:
         driver.get(link)
         WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
         time.sleep(1)
-
-        try:
-            label_elem = WebDriverWait(driver, 5).until(
-                EC.presence_of_element_located((By.XPATH, "//div[contains(text(), 'Nilai TKDN')]"))
-            )
-            value_elem = label_elem.find_element(By.XPATH, "./following-sibling::div//a")
-            data["TKDN"] = value_elem.text.strip()
-            data["Link TKDN"] = value_elem.get_attribute("href")
-
-            # ⏬ Langsung ambil data TKDN di tab aktif (bukan tab baru)
-            current_url = driver.current_url
-            driver.get(data["Link TKDN"])
-
-            try:
-                sertifikat_elem = WebDriverWait(driver, 5).until(
-                    EC.presence_of_element_located((By.XPATH, "//div[contains(text(), 'No. Sertifikat')]"))
-                )
-                sertifikat_val = sertifikat_elem.find_element(By.XPATH, "./following-sibling::div").text.strip()
-                data["No Sertifikat TKDN"] = sertifikat_val
-            except TimeoutException:
-                data["No Sertifikat TKDN"] = ""
-
-            # 🔙 Kembali ke halaman awal produk
-            driver.get(current_url)
-
-        except Exception as e:
-            logging.warning(f"Gagal ambil TKDN dari {link}: {e}")
-            data["TKDN"] = ""
-            data["Link TKDN"] = ""
-            data["No Sertifikat TKDN"] = ""
 
         try:
             data["NAMA PRODUK"] = driver.find_element(By.TAG_NAME, "h1").text.strip()
@@ -272,20 +158,8 @@ def scrape_data(driver, link, idx, img_folder, rembg_folder, executor):
         except:
             pass
 
-        if future_tkdn:
-            try:
-                tkdn_data = future_tkdn.result(timeout=10)
-                data.update(tkdn_data)
-            except Exception as e:
-                logging.warning(f"Gagal ambil hasil future TKDN: {e}")
-
     except Exception as e:
         print(f"❌ Error scrape {link}: {e}")
-
-    if future_tkdn:
-        try:
-            data.update(future_tkdn.result(timeout=10))
-        except: pass
 
     return data
 
