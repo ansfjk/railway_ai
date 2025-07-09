@@ -108,7 +108,7 @@ def scrape_data(driver, link, idx, img_folder, rembg_folder, executor):
     data["NO"] = idx
     data["LINK"] = link
 
-    print(f"🔗 Scrape {idx}: {link}")
+    logging.info(f"🔗 Scrape {idx}: {link}")
     try:
         driver.get(link)
         WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
@@ -119,9 +119,9 @@ def scrape_data(driver, link, idx, img_folder, rembg_folder, executor):
             try:
                 nama_produk_elem = driver.find_element(By.TAG_NAME, "h1")
                 data["NAMA PRODUK"] = nama_produk_elem.text.strip()
-                print(f"✅ NAMA PRODUK ditemukan: {data['NAMA PRODUK']}")
+                logging.info(f"✅ NAMA PRODUK ditemukan: {data['NAMA PRODUK']}")
             except Exception as e:
-                print(f"❌ Gagal ambil NAMA PRODUK: {e}")
+                logging.info(f"❌ Gagal ambil NAMA PRODUK: {e}")
                 with open(f"debug_nama_produk_{idx}.html", "w", encoding="utf-8") as f:
                     f.write(driver.page_source)
 
@@ -167,7 +167,7 @@ def scrape_data(driver, link, idx, img_folder, rembg_folder, executor):
             pass
 
     except Exception as e:
-        print(f"❌ Error scrape {link}: {e}")
+        logging.info(f"❌ Error scrape {link}: {e}")
 
     return data
 
