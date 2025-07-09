@@ -121,7 +121,7 @@ def scrape_data(driver, link, idx, img_folder, rembg_folder, executor):
             )
             nama_produk_elem = driver.find_element(By.TAG_NAME, "h1")
 
-            logging.info(f"{nama_produk_elem.text()}")
+            logging.info(f"hasil {nama_produk_elem.text()}")
             nama_text = nama_produk_elem.text.strip()
 
             if not nama_text or nama_text.lower() == "sebentar...":
