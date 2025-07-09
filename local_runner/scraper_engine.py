@@ -122,7 +122,7 @@ def scrape_data(driver, link, idx, img_folder, rembg_folder, executor):
                 EC.presence_of_element_located((By.CLASS_NAME, "text-2xl"))
             )
             raw = harga_elem.text.strip()
-            data["HARGA"] = raw.replace("Rp", "").replace(".", "").replace("\u00a0", "").strip()
+            data["HARGA"] = raw.replace("Rp", "").replace(".", "").replace(" ", "").strip()
         except: pass
 
         try:
@@ -194,7 +194,7 @@ def run_custom(list_link, nama_file_csv="hasil_scrape", output_dir="CSV Sumber")
             data = scrape_data(driver, link, idx, folder_gambar_asli, folder_gambar_nobg, executor)
 
             if data.get("NAMA PRODUK", "").strip().lower() == "sebentar...":
-                logging.warning(f"⚠️ NAMA PRODUK belum valid untuk {link}, hentikan scraping untuk sementara.")
+                logging.warning(f"⚠️ NAMA PRODUK belum valid untuk {link}, hentikan scraping.")
                 break
 
             hasil_scrape.append(data)
@@ -206,12 +206,4 @@ def run_custom(list_link, nama_file_csv="hasil_scrape", output_dir="CSV Sumber")
     df_final = df_final.reindex(columns=COLUMNS)
     df_final.to_csv(hasil_csv_path, index=False, encoding="utf-8")
     logging.info(f"✅ CSV disimpan: {hasil_csv_path}")
-
-    # ✅ ZIP gambar hasil rembg
-    zip_path = output_dir / f"{nama_file_csv}_images.zip"
-    with zipfile.ZipFile(zip_path, "w") as zipf:
-        for img in folder_gambar_nobg.glob("*.png"):
-            zipf.write(img, arcname=img.name)
-    logging.info(f"✅ ZIP gambar disimpan: {zip_path}")
-
-    return str(zip_path)
+    return str(hasil_csv_path)

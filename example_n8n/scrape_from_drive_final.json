@@ -1,0 +1,94 @@
+{
+  "name": "Scrape From Drive Final",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "https://docs.google.com/spreadsheets/d/1wgLHVpbkBjLN9mD_tBrfTv5_ne62Us-L7mbMkC4Dn2M/export?format=csv",
+        "options": {}
+      },
+      "name": "Download CSV from Drive",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [300, 200]
+    },
+    {
+      "parameters": {
+        "options": {},
+        "input": "={{$json['body']}}"
+      },
+      "name": "Parse CSV",
+      "type": "n8n-nodes-base.csv",
+      "typeVersion": 1,
+      "position": [500, 200]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "name",
+              "value": "produk_drive"
+            },
+            {
+              "name": "links",
+              "value": "={{ $items().map(i => i.json.LINK.trim()) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Format Payload",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [700, 200]
+    },
+    {
+      "parameters": {
+        "url": "https://railwayai-production.up.railway.app/webhook",
+        "method": "POST",
+        "jsonParameters": true,
+        "options": {},
+        "bodyParametersJson": "={ \"name\": $json.name, \"links\": $json.links }"
+      },
+      "name": "Send to Railway",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [900, 200]
+    }
+  ],
+  "connections": {
+    "Download CSV from Drive": {
+      "main": [
+        [
+          {
+            "node": "Parse CSV",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse CSV": {
+      "main": [
+        [
+          {
+            "node": "Format Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Payload": {
+      "main": [
+        [
+          {
+            "node": "Send to Railway",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

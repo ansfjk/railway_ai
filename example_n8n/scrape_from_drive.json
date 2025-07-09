@@ -1,0 +1,100 @@
+{
+  "name": "Scrape From Google Drive CSV",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/export?format=csv",
+        "options": {}
+      },
+      "id": "http_request_drive_csv",
+      "name": "Download CSV from Drive",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [300, 200],
+      "credentials": {}
+    },
+    {
+      "parameters": {
+        "options": {},
+        "input": "={{$json['body']}}"
+      },
+      "id": "csv_parse",
+      "name": "Parse CSV",
+      "type": "n8n-nodes-base.csv",
+      "typeVersion": 1,
+      "position": [500, 200]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "name",
+              "value": "drive_scrape"
+            },
+            {
+              "name": "links",
+              "value": "={{ $items().map(i => i.json.LINK) }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "format_payload",
+      "name": "Format Payload",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [700, 200]
+    },
+    {
+      "parameters": {
+        "url": "https://your-railway-app.up.railway.app/webhook",
+        "method": "POST",
+        "jsonParameters": true,
+        "options": {},
+        "bodyParametersJson": "={ \\\"name\\\": $json.name, \\\"links\\\": $json.links }"
+      },
+      "id": "send_to_railway",
+      "name": "Send to Railway",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [900, 200],
+      "credentials": {}
+    }
+  ],
+  "connections": {
+    "Download CSV from Drive": {
+      "main": [
+        [
+          {
+            "node": "Parse CSV",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse CSV": {
+      "main": [
+        [
+          {
+            "node": "Format Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Payload": {
+      "main": [
+        [
+          {
+            "node": "Send to Railway",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

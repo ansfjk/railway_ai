@@ -1,0 +1,42 @@
+{
+  "name": "Scrape Trigger",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "scrape",
+        "options": {}
+      },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [250, 300],
+      "webhookType": "trigger"
+    },
+    {
+      "parameters": {
+        "url": "https://your-railway-url/webhook",
+        "method": "POST",
+        "jsonParameters": true,
+        "options": {},
+        "bodyParametersJson": "{ \"name\": \"produk_gue\", \"links\": [\"https://example.com/produk1\"] }"
+      },
+      "name": "Send to Railway",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [500, 300]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Send to Railway",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
