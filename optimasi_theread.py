@@ -207,9 +207,9 @@ def scrape_data(driver, link, idx, img_folder, rembg_folder, executor):
 
             # Langsung buka tab baru untuk scrape TKDN
             try:
-                driver.execute_script("window.open('');")
-                driver.switch_to.window(driver.window_handles[-1])
-                driver.get(data["Link TKDN"])
+                current_url = driver.current_url  # simpan URL halaman utama
+
+                driver.get(data["Link TKDN"])  # langsung buka halaman TKDN di tab aktif
                 WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
 
                 try:
@@ -218,8 +218,8 @@ def scrape_data(driver, link, idx, img_folder, rembg_folder, executor):
                 except:
                     data["No Sertifikat TKDN"] = ""
 
-                driver.close()
-                driver.switch_to.window(driver.window_handles[0])
+                driver.get(current_url)  # kembali ke halaman utama produk
+
             except Exception as e:
                 logging.warning(f"Gagal ambil detail TKDN dari {data['Link TKDN']}: {e}")
                 data["No Sertifikat TKDN"] = ""
