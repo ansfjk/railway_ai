@@ -51,7 +51,6 @@ def close_driver(driver):
     try:
         driver.quit()
     finally:
-        # 🧹 Hapus direktori user-data
         if hasattr(driver, "_user_data_dir"):
             shutil.rmtree(driver._user_data_dir, ignore_errors=True)
             
@@ -61,12 +60,11 @@ def init_driver():
     options.add_argument("--disable-blink-features=AutomationControlled")
     options.add_argument("user-agent=Mozilla/5.0")
 
-    # ⛑ FIX untuk error 'user data dir in use'
     user_data_dir = tempfile.mkdtemp(prefix="selenium_user_")
     options.add_argument(f"--user-data-dir={user_data_dir}")
 
     driver = webdriver.Chrome(options=options)
-    driver._user_data_dir = user_data_dir  # 🧹 Tandai untuk cleanup nanti
+    driver._user_data_dir = user_data_dir
     stealth(driver,
         languages=["en-US", "en"],
         vendor="Google Inc.",
@@ -107,6 +105,7 @@ def remove_bg_and_save(input_path, output_path):
 
 def ambil_tkdn_data(link_tkdn):
     data = {}
+    driver = None
     try:
         driver = init_driver()
         driver.get(link_tkdn)
@@ -116,10 +115,12 @@ def ambil_tkdn_data(link_tkdn):
             data["No Sertifikat TKDN"] = label.find_element(By.XPATH, "./following-sibling::div").text.strip()
         except:
             data["No Sertifikat TKDN"] = ""
-        driver.quit()
     except Exception as e:
         logging.warning(f"Thread TKDN error: {e}")
         data["No Sertifikat TKDN"] = ""
+    finally:
+        if driver:
+            close_driver(driver)
     return data
 
 def scrape_data(driver, link, idx, img_folder, rembg_folder, executor):
@@ -258,7 +259,6 @@ def scrape_data(driver, link, idx, img_folder, rembg_folder, executor):
     return data
 
 def run_custom(list_link, nama_file_csv="hasil_scrape", output_dir="CSV Sumber"):
-
     output_dir = Path(output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -282,7 +282,6 @@ def run_custom(list_link, nama_file_csv="hasil_scrape", output_dir="CSV Sumber")
         if not df_existing.empty and "NO" in df_existing.columns:
             start_idx = int(df_existing["NO"].max()) + 1
 
-    executor = ThreadPoolExecutor(max_workers=2)
     try:
         for idx, link in enumerate(list_link, start=start_idx):
             if link in scraped_links:
@@ -293,9 +292,8 @@ def run_custom(list_link, nama_file_csv="hasil_scrape", output_dir="CSV Sumber")
             hasil_scrape.append(data)
             logging.info(f"{idx}: Done in {time.time() - start:.2f}s")
     finally:
-        driver.quit()
         close_driver(driver)
-        executor.shutdown()
+        executor.shutdown(wait=True)
 
     pd.DataFrame(hasil_scrape)[COLUMNS].to_csv(hasil_csv_path, index=False, encoding="utf-8")
     logging.info(f"✅ Data disimpan: {hasil_csv_path}")
