@@ -47,13 +47,13 @@ COLUMNS = [
     "Merek", "Nama Pemilik SNI", "SNI", "Nomor SKU", "Kode KBKI", "Jenis Produk"
 ] + [col.replace("Spec_", "").replace("Select_", "").replace("Add_", "").strip() for col in RAW_SPEC_COLUMNS]
 
-def close_driver(driver):
-    try:
-        driver.quit()
-        time.sleep(3)
-    finally:
-        if hasattr(driver, "_user_data_dir"):
-            shutil.rmtree(driver._user_data_dir, ignore_errors=True)
+# def close_driver(driver):
+#     try:
+#         driver.quit()
+#         time.sleep(3)
+#     finally:
+#         if hasattr(driver, "_user_data_dir"):
+#             shutil.rmtree(driver._user_data_dir, ignore_errors=True)
 
 def init_driver():
     options = Options()
@@ -61,7 +61,7 @@ def init_driver():
     options.add_argument("--disable-blink-features=AutomationControlled")
     options.add_argument("user-agent=Mozilla/5.0")
     options.add_argument("--no-sandbox")
-    # options.add_argument("--headless=new")
+    options.add_argument("--headless")
     options.add_argument("--disable-dev-shm-usage")
 
     driver = webdriver.Chrome(options=options)
@@ -205,7 +205,7 @@ def run_custom(list_link, nama_file_csv="hasil_scrape", output_dir="CSV Sumber")
             hasil_scrape.append(data)
             logging.info(f"{idx}: Done in {time.time() - start:.2f}s")
     finally:
-        close_driver(driver)
+        # close_driver(driver)
         executor.shutdown(wait=True)
 
     pd.DataFrame(hasil_scrape)[COLUMNS].to_csv(hasil_csv_path, index=False, encoding="utf-8")
