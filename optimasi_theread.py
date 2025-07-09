@@ -50,6 +50,7 @@ COLUMNS = [
 def close_driver(driver):
     try:
         driver.quit()
+        time.sleep(1)  # ← 
     finally:
         if hasattr(driver, "_user_data_dir"):
             shutil.rmtree(driver._user_data_dir, ignore_errors=True)
@@ -64,11 +65,11 @@ def init_driver():
     options.add_argument("--disable-dev-shm-usage")
 
 
-    user_data_dir = tempfile.mkdtemp(prefix="selenium_user_")
-    options.add_argument(f"--user-data-dir={user_data_dir}")
+    # user_data_dir = tempfile.mkdtemp(prefix="selenium_user_")
+    # options.add_argument(f"--user-data-dir={user_data_dir}")
 
     driver = webdriver.Chrome(options=options)
-    driver._user_data_dir = user_data_dir
+    # driver._user_data_dir = user_data_dir
     stealth(driver,
         languages=["en-US", "en"],
         vendor="Google Inc.",
