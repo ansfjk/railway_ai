@@ -50,7 +50,7 @@ COLUMNS = [
 def close_driver(driver):
     try:
         driver.quit()
-        time.sleep(1)
+        time.sleep(3)
     finally:
         if hasattr(driver, "_user_data_dir"):
             shutil.rmtree(driver._user_data_dir, ignore_errors=True)
@@ -61,7 +61,7 @@ def init_driver():
     options.add_argument("--disable-blink-features=AutomationControlled")
     options.add_argument("user-agent=Mozilla/5.0")
     options.add_argument("--no-sandbox")
-    options.add_argument("--headless=new")
+    # options.add_argument("--headless=new")
     options.add_argument("--disable-dev-shm-usage")
 
     driver = webdriver.Chrome(options=options)
@@ -112,11 +112,19 @@ def scrape_data(driver, link, idx, img_folder, rembg_folder, executor):
     try:
         driver.get(link)
         WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
-        time.sleep(1)
+        time.sleep(3)
 
         try:
             data["NAMA PRODUK"] = driver.find_element(By.TAG_NAME, "h1").text.strip()
-            logging.debug(f"Nm dari {data.get('NAMA PRODUK')}")
+            try:
+                nama_produk_elem = driver.find_element(By.TAG_NAME, "h1")
+                data["NAMA PRODUK"] = nama_produk_elem.text.strip()
+                print(f"✅ NAMA PRODUK ditemukan: {data['NAMA PRODUK']}")
+            except Exception as e:
+                print(f"❌ Gagal ambil NAMA PRODUK: {e}")
+                with open(f"debug_nama_produk_{idx}.html", "w", encoding="utf-8") as f:
+                    f.write(driver.page_source)
+
         except: pass
 
         try:
