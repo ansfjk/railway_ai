@@ -61,6 +61,8 @@ def init_driver():
     options.add_argument("user-agent=Mozilla/5.0")
     options.add_argument("--no-sandbox")
     options.add_argument("--headless=new")
+    options.add_argument("--disable-dev-shm-usage")
+
 
     user_data_dir = tempfile.mkdtemp(prefix="selenium_user_")
     options.add_argument(f"--user-data-dir={user_data_dir}")
@@ -107,7 +109,6 @@ def remove_bg_and_save(input_path, output_path):
 
 def ambil_tkdn_data(link_tkdn):
     data = {}
-    driver = None
     try:
         driver = init_driver()
         driver.get(link_tkdn)
@@ -115,15 +116,16 @@ def ambil_tkdn_data(link_tkdn):
         try:
             label = driver.find_element(By.XPATH, "//div[contains(text(), 'No. Sertifikat')]")
             data["No Sertifikat TKDN"] = label.find_element(By.XPATH, "./following-sibling::div").text.strip()
-        except:
+        except Exception as e:
+            logging.warning(f"Label sertifikat tidak ditemukan di {link_tkdn}: {e}")
             data["No Sertifikat TKDN"] = ""
+        driver.quit()
+        close_driver(driver)
     except Exception as e:
-        logging.warning(f"Thread TKDN error: {e}")
+        logging.warning(f"Thread TKDN error untuk {link_tkdn}: {e}")
         data["No Sertifikat TKDN"] = ""
-    finally:
-        if driver:
-            close_driver(driver)
     return data
+
 
 def scrape_data(driver, link, idx, img_folder, rembg_folder, executor):
     data = {k: "" for k in COLUMNS}
