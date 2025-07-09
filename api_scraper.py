@@ -66,14 +66,6 @@ def real_scrape(df: pd.DataFrame, name="hasil_scrape"):
     df_out.to_csv(out_path, index=False)
     return out_path
 
-
-@app.route("/download-debug-html/<filename>")
-def download_debug_html(filename):
-    filepath = Path(f"debug/{filename}")
-    if filepath.exists():
-        return send_file(filepath, as_attachment=True)
-    return "File tidak ditemukan", 404
-
 @app.route("/")
 def home():
     return render_template_string("""
