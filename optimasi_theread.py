@@ -53,12 +53,14 @@ def close_driver(driver):
     finally:
         if hasattr(driver, "_user_data_dir"):
             shutil.rmtree(driver._user_data_dir, ignore_errors=True)
-            
+
 def init_driver():
     options = Options()
     options.add_argument("start-maximized")
     options.add_argument("--disable-blink-features=AutomationControlled")
     options.add_argument("user-agent=Mozilla/5.0")
+    options.add_argument("--no-sandbox")
+    options.add_argument("--headless=new")
 
     user_data_dir = tempfile.mkdtemp(prefix="selenium_user_")
     options.add_argument(f"--user-data-dir={user_data_dir}")
